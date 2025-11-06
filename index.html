@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Anes Soltani — Portfolio</title>
+<style>
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: #000; font-family: 'Inter', monospace;
+    color: #fff;
+  }
+body {
+  background: url('https://plus.unsplash.com/premium_photo-1685655612580-dcd846cb1aed?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-blend-mode: multiply;
+}
+
+  canvas#spiral {
+    
+    position: fixed; inset: 0; width: 100vw; height: 100vh;
+    z-index: 0; pointer-events: none;
+  }
+  canvas#spiral {
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 10px rgba(245,215,110,0.4));
+}
+  /* Keep the overlay centered perfectly */
+.overlay {
+  position: relative;
+  z-index: 10;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Name + subtitle scaling */
+.overlay h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  text-shadow: 0 0 10px rgba(245, 215, 110, 0.1);
+}
+
+.overlay p {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #f5d76e;
+  margin-bottom: 40px;
+  letter-spacing: 1px;
+}
+
+/* Buttons row stays centered */
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+/* Buttons: same border width as spiral (≈1.4 px), larger text, bolder */
+button {
+  background: none;
+  color: #fff;
+  border: 1.4px solid #f5d76e;
+  padding: 12px 30px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border-radius: 3px;
+}
+
+button:hover {
+  background: rgba(245, 215, 110, 0.15);
+  transform: scale(1.06);
+  text-shadow: 0 0 6px #f5d76e55;
+}
+.window {
+  position: absolute;
+  z-index: 20;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background-color: rgba(15, 15, 15, 0.1); /* more transparent (was 0.45) */
+  border: 1px solid rgba(245, 215, 110, 0.25); /* softer border */
+  border-radius: 14px;
+  width: 70vw;
+  max-width: 900px;
+  max-height: 80vh;
+  padding: 50px 60px 80px;
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  text-align: left;
+  box-shadow:
+    0 0 30px rgba(245, 215, 110, 0.05),
+    inset 0 0 40px rgba(245, 215, 110, 0.08); /* subtle golden inner glow */
+  scrollbar-width: thin;
+  scrollbar-color: #f5d76e22 #0a0a0a;
+
+  -webkit-backdrop-filter: blur(14px) saturate(1.3) brightness(1.05);
+}
+
+.window::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at top right,
+    rgba(245, 215, 110, 0.15),
+    transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+
+.overlay.fade-out {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+/* Custom Scrollbar (WebKit) */
+.window::-webkit-scrollbar {
+  width: 8px;
+}
+.window::-webkit-scrollbar-track {
+  background: #0a0a0a;
+  border-radius: 10px;
+}
+.window::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #f5d76e, #c9a93b);
+  border-radius: 10px;
+}
+.window::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ffe58a, #d4b544);
+}
+
+/* Typography & layout */
+.window h2 {
+  color: #f5d76e;
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+  border-bottom: 1px solid rgba(245, 215, 110, 0.3);
+  padding-bottom: 10px;
+}
+
+.window section {
+  margin-bottom: 30px;
+}
+
+.window h3 {
+  color: #f5d76e;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  border-left: 3px solid #f5d76e55;
+  padding-left: 10px;
+}
+
+.window p {
+  line-height: 1.6;
+  font-size: 1rem;
+  margin-bottom: 15px;
+  color: #ddd;
+}
+
+.window ul {
+  list-style: none;
+  padding-left: 15px;
+}
+.window ul li::before {
+  content: "– ";
+  color: #f5d76e;
+}
+.window strong {
+  color: #fff;
+}
+
+/* Sticky close button */
+.close {
+  position: sticky;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-block;
+  background: none;
+  border: 1px solid #f5d76e;
+  color: #f5d76e;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+.close:hover {
+  background: rgba(245,215,110,0.1);
+  transform: translateX(-50%) scale(1.05);
+}
+
+.project-list {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.project-item h3 {
+  color: #f5d76e;
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.project-item p {
+  color: #ddd;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.project-links {
+  display: flex;
+  gap: 15px;
+}
+
+.project-btn {
+  border: 1.4px solid #f5d76e;
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 22px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.3s ease;
+  border-radius: 3px;
+}
+
+.project-btn:hover {
+  background: rgba(245, 215, 110, 0.15);
+  transform: scale(1.05);
+  text-shadow: 0 0 6px #f5d76e55;
+}
+
+
+
+#close-doc {
+  margin-top: 20px;
+  padding: 10px 24px;
+  border: 1.4px solid #f5d76e;
+  color: #f5d76e;
+  background: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+#close-doc:hover {
+  background: rgba(245,215,110,0.1);
+  
+}
+
+#doc-frame {
+  width: 85%;
+  height: 70vh;
+  border: 1.4px solid #f5d76e;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 30px rgba(245,215,110,0.1);
+}
+#doc-loader {
+  display: none;
+  margin-bottom: 16px;
+  color: #f5d76e;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+#doc-frame {
+  width: 85%;
+  height: 70vh;
+  border: 1.4px solid #f5d76e;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 30px rgba(245,215,110,0.1);
+  opacity: 0;               /* start hidden; fade in onload */
+  transition: opacity .4s ease;
+}
+
+
+#projects,
+#documentation {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  transform: translate(-50%, -50%) scale(1);
+  width: 70vw;
+  max-width: 900px;
+  max-height: 80vh;
+  border-radius: 12px;
+}
+
+#documentation {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.85);
+  display: none; /* hidden until opened */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+
+</style>
+</head>
+<body>
+<canvas id="spiral"></canvas>
+
+<div class="overlay">
+  <h1>ANES SOLTANI</h1>
+  <p>DevOps • Systems Engineering • Programming</p>
+  <div class="buttons">
+    <button data-target="about">About</button>
+    <button data-target="projects">Projects</button>
+    <button data-target="articles">Articles</button>
+  </div>
+</div>
+
+<!-- Windows -->
+<div class="window" id="about">
+  <h2>About</h2>
+
+  <section>
+    <h3>Résumé</h3>
+    <p>
+      Titulaire d’un Master, passionné par l’automatisation DevOps, la programmation et la
+      pensée computationnelle. Mon engagement vise à exploiter le potentiel transformateur
+      de la technologie pour avoir un impact positif et contribuer à un monde meilleur.
+    </p>
+  </section>
+
+  <section>
+    <h3>Expérience</h3>
+    <p><strong>SPIE ICS</strong> — Grenoble, France (Alternance en administration systèmes, 2023–2025)</p>
+    <ul>
+      <li>Conception de l’architecture <strong>NOVA</strong>, une solution GitOps centralisée et modulaire pilotée par GitLab CI/CD.</li>
+      <li>Automatisation complète du cycle de vie des consoles d’administration (provisioning, déploiement, mise à jour, rollback).</li>
+      <li>Conteneurisation d’applications internes et clientes, gestion d’incidents N2/N3, migrations OS et renforcement sécurité.</li>
+      <li>Propositions d’améliorations et automatisation des tâches récurrentes (correctifs, provisionnement, configuration serveurs).</li>
+    </ul>
+
+    <p><strong>AI-BRIGHT</strong> — Tunis, Tunisie (Stage, avril–juin 2023)</p>
+    <ul>
+      <li>Développement d’un modèle de langage pour une application de fitness en exploitant les services AWS.</li>
+      <li>Fourniture d’un accompagnement personnalisé et de conseils intelligents basés sur les besoins utilisateurs.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>Formation</h3>
+    <ul>
+      <li><strong>ENSIMAG</strong>, Grenoble — Master en Réseaux Informatiques d’Entreprise (2023–2025)</li>
+      <li><strong>Aix-Marseille Université</strong> — Licence en Informatique (2020–2023)</li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>Certifications</h3>
+    <ul>
+      <li><strong>DevOps Institute</strong> — Certification <em>DevOps Foundation</em> (2025)</li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>Langues</h3>
+    <p>Anglais (Courant) • Français (Courant) • Arabe (Langue maternelle)</p>
+  </section>
+
+  <section>
+    <h3>Outils & Compétences</h3>
+    <ul>
+      <li><strong>Langages :</strong> Python, Go, Java, C, JavaScript</li>
+      <li><strong>Templates :</strong> Jinja2, Mustache</li>
+      <li><strong>Frameworks :</strong> Django, ExpressJS</li>
+      <li><strong>Virtualisation :</strong> VMware, KVM/QEMU</li>
+      <li><strong>Systèmes :</strong> Linux (Debian, RedHat, CentOS), Windows</li>
+      <li><strong>Contrôle de version :</strong> Git, GitLab</li>
+      <li><strong>DevOps :</strong> Docker, GitLab CI/CD, Ansible, Terraform, Jenkins, Wazuh, Kubernetes</li>
+      <li><strong>Documentation :</strong> Markdown, LaTeX, mkdocs</li>
+    </ul>
+  </section>
+
+  <button class="close">Close</button>
+</div>
+
+
+<div class="window" id="projects">
+  <h2>Projects</h2>
+  <p>Here’s a selection of my ongoing and flagship works. Each project is designed with scalability, automation, and elegant architecture in mind.</p>
+
+  <div class="project-list">
+    <div class="project-item">
+      <h3>NOVA — GitOps Modular Architecture</h3>
+      <p>
+        A fully automated GitOps ecosystem built around GitLab CI/CD, container orchestration, and modular service deployment
+        (Wazuh, Gitea, Semaphore…). Designed for scalability and industrial reproducibility.
+      </p>
+<div class="project-links">
+  <a href="#" class="project-btn" onclick="openDocumentation('https://fr.wikipedia.org/wiki/Documentation')">Documentation</a>
+  <a href="#" class="project-btn" onclick="openDocumentation('https://your-report-link.com')">Technical Report</a>
+</div>
+
+    </div>
+
+    <!-- Future projects -->
+    <!-- <div class="project-item">…</div> -->
+  </div>
+
+  <button class="close">Close</button>
+</div>
+
+
+<div class="window" id="articles">
+  <h2>Articles</h2>
+  <p>Essays on systems thinking, entropy, DevOps culture, and design-driven engineering.</p>
+  <button class="close">Close</button>
+</div>
+
+<!-- Documentation window  -->
+<div class="window" id="documentation">
+  <h2>Documentation</h2>
+  <div id="doc-loader">Loading…</div>
+
+  <iframe id="doc-frame" src="" frameborder="0"></iframe>
+  <button class="close" id="close-doc">Close</button>
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script>
+const canvas = document.getElementById('spiral');
+const ctx = canvas.getContext('2d');
+const phi = (1 + Math.sqrt(5)) / 2;
+const goldenAngle = 137.50776405;
+let rotation = 0;
+let currentWindow = null;
+const turns = 11;
+
+function resizeCanvas() {
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+  drawSpiral(rotation);
+}
+addEventListener('resize', resizeCanvas);
+
+
+
+
+function drawSpiral(angleDeg = 0) {
+  const { width, height } = canvas;
+  ctx.clearRect(0, 0, width, height);
+  ctx.save();
+  ctx.translate(width / 2, height / 2);
+  ctx.rotate(angleDeg * Math.PI / 180);
+
+  ctx.strokeStyle = '#f5d76e';
+  ctx.shadowColor = '#f5d76e55';
+  ctx.shadowBlur = 10;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+
+  const thetaMax = 360 * turns;
+  const Rmax = Math.sqrt(width * width + height * height) / 2;
+  const a = Rmax / Math.pow(phi, (thetaMax / 90));
+  const step = 0.75;
+
+  for (let theta = 0; theta <= thetaMax; theta += step) {
+    const rad = theta * Math.PI / 180;
+    const r = a * Math.pow(phi, (theta / 90));
+    const x = r * Math.cos(rad);
+    const y = r * Math.sin(rad);
+    if (theta === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+resizeCanvas();
+drawSpiral(rotation);
+
+
+function rotateSpiral(forward = true) {
+  const duration = 2;
+  const angleChange = forward ? goldenAngle * 3 : -goldenAngle * 3;
+  gsap.to({ rot: rotation }, {
+    rot: rotation + angleChange,
+    duration,
+    ease: "power2.inOut",
+    onUpdate: function() {
+      rotation = this.targets()[0].rot;
+      drawSpiral(rotation);
+    }
+  });
+}
+const veil = document.getElementById('morph-veil');
+const docViewer = document.getElementById('doc-viewer');
+const docFrame = document.getElementById('doc-frame');
+const closeDoc = document.getElementById('close-doc');
+
+
+function openDocumentation(url) {
+  rotateSpiral(true)
+  const projects = document.getElementById('projects');
+  const docs = document.getElementById('documentation');
+  const frame = document.getElementById('doc-frame');
+  const loader = document.getElementById('doc-loader');
+
+  // Prepare docs pane, no heavy load yet
+  docs.style.display = "flex";
+  docs.style.pointerEvents = "auto";
+  frame.style.opacity = 0;        // hide frame until loaded
+  loader.style.display = "block"; // show loader
+
+  // Cross-morph (both at once, smooth like your close)
+  gsap.to(projects, {
+    scale: 0.85, opacity: 0, duration: 1.0, ease: "power3.inOut",
+    onComplete: () => { projects.style.pointerEvents = "none"; projects.style.display = "none"; }
+  });
+  gsap.fromTo(docs,
+    { scale: 0.85, opacity: 0 },
+    { scale: 1, opacity: 1, duration: 1.0, ease: "power3.inOut" }
+  );
+
+  // After the morph completes, THEN load the heavy page
+  setTimeout(() => {
+    // attach once per open
+    frame.onload = () => {
+      loader.style.display = "none";
+      frame.style.opacity = 1;    // smooth fade-in of the doc
+    };
+    frame.src = url;               // start loading now (no jank during tween)
+  }, 1000); // matches the 1.0s morph duration
+}
+
+document.getElementById('close-doc').addEventListener('click', () => {
+  const projects = document.getElementById('projects');
+  const docs = document.getElementById('documentation');
+  const frame = document.getElementById('doc-frame');
+  const loader = document.getElementById('doc-loader');
+
+  // Reverse morph (already smooth in your build)
+  gsap.to(docs, {
+    scale: 0.85, opacity: 0, duration: 1.0, ease: "power3.inOut",
+    onComplete: () => {
+      docs.style.pointerEvents = "none";
+      docs.style.display = "none";
+      loader.style.display = "none";
+      frame.style.opacity = 0;
+      // Optional: free memory & avoid background network
+      frame.src = "about:blank";
+      frame.onload = null;
+    }
+  });
+  gsap.fromTo(projects,
+    { scale: 0.85, opacity: 0 },
+    { scale: 1, opacity: 1, duration: 1.0, ease: "power3.inOut",
+      onStart: () => { projects.style.display = "block"; projects.style.pointerEvents = "auto"; }
+    }
+  );
+});
+
+function openWindow(id) {
+  const el = document.getElementById(id);
+  el.style.pointerEvents = 'auto';
+  gsap.fromTo(el,
+    { scale: 0, opacity: 0 },
+    { scale: 1, opacity: 1, duration: 1.1, ease: "power3.out", delay: 0.4 }
+  );
+}
+
+function closeWindow(el) {
+  gsap.to(el, {
+    scale: 0, opacity: 0, duration: 0.8, ease: "power3.in",
+    onComplete: () => { el.style.pointerEvents = 'none'; }
+  });
+}
+
+// Button logic
+document.querySelectorAll('.buttons button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const targetId = btn.dataset.target;
+    if (currentWindow === targetId) return;
+    if (currentWindow) closeWindow(document.getElementById(currentWindow));
+    currentWindow = targetId;
+    rotateSpiral(true);
+    openWindow(targetId);
+  });
+});
+
+document.querySelectorAll('.close').forEach(c => {
+  c.addEventListener('click', e => {
+    const w = e.target.closest('.window');
+    if (currentWindow === w.id) currentWindow = null;
+    closeWindow(w);
+    rotateSpiral(false);
+  });
+});
+
+const overlay = document.querySelector('.overlay');
+
+function fadeOverlay(hide = true) {
+  overlay.classList.toggle('fade-out', hide);
+}
+
+// Hook window opens
+document.querySelectorAll('.buttons button').forEach(btn => {
+  btn.addEventListener('click', () => fadeOverlay(true));
+});
+
+// Generic close buttons (About / Projects / Articles)
+document.querySelectorAll('.close').forEach(c => {
+  c.addEventListener('click', e => {
+    const w = e.target.closest('.window');
+    // Let the close animation finish, then check visibility
+    setTimeout(() => {
+      const anyVisible = Array.from(document.querySelectorAll('.window'))
+        .some(win => parseFloat(window.getComputedStyle(win).opacity) > 0.1);
+      if (!anyVisible) fadeOverlay(false);
+    }, 800);
+  });
+});
+
+</script>
+</body>
+</html>
